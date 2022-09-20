@@ -17,6 +17,8 @@ function App() {
             setProduct(prev => [...prev, JSON.parse(result.data.toString())]);
             qrScanner.stop();
           }
+        }, {
+          // highlightScanRegion: true,
         }
       );
     }
