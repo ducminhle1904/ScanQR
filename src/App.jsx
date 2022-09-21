@@ -1,7 +1,8 @@
 import QrScanner from 'qr-scanner';
-import { Button, ActionIcon, List } from '@mantine/core';
-import { IconFocusCentered, IconCirclePlus, IconCircleMinus } from '@tabler/icons'
+import { Button, ActionIcon, List, Center } from '@mantine/core';
+import { IconFocusCentered, IconCirclePlus, IconCircleMinus, IconCircleCheck } from '@tabler/icons'
 import { useState } from 'react';
+import { showNotification } from '@mantine/notifications';
 
 function App() {
   let videoElem
@@ -14,15 +15,61 @@ function App() {
         videoElem,
         result => {
           if (result) {
-            setProduct(prev => [...prev, JSON.parse(result.data.toString())]);
+            const parseProduct = JSON.parse(result.data.toString());
+            const itemIndex = product.findIndex((item) => item.id === parseProduct.id);
+            if (itemIndex === -1) {
+              setProduct(prev => [...prev, parseProduct]);
+            } else {
+              setProduct(product => product.map(i => i.id === parseProduct.id 
+                ? { ...i, quantity: i.quantity + 1 }
+                : i
+              ));
+            }
+            showNotification({
+              title: 'Quét thành công',
+              icon: <IconCircleCheck />,
+              color: "green"
+            })
             qrScanner.stop();
           }
         }, {
           // highlightScanRegion: true,
+          // highlightCodeOutline: true,
         }
       );
     }
   }, 1000);
+
+  const vnCurrency = (price) => {
+    return price.toLocaleString('it-IT', {style : 'currency', currency : 'VND'});
+  }
+
+  const increseQuantity = id => {
+    const itemIndex = product.findIndex((item) => item.id === id);
+    if (itemIndex !== -1) {
+      setProduct(product => product.map(i => i.id === id 
+        ? { ...i, quantity: i.quantity + 1 }
+        : i
+      ));
+    }
+  }
+
+  const decreaseQuantity = id => {
+    const itemIndex = product.findIndex((item) => item.id === id);
+    if (itemIndex !== -1) {
+      setProduct(product => product.map(i => i.id === id 
+        ? { ...i, quantity: i.quantity - 1 }
+        : i
+      ));
+      if (product[itemIndex].quantity === 1) {
+        setProduct(product => product.filter(i => i.id !== id));
+      }
+    }
+  }
+
+  const onSubmit = () => {
+    setProduct([])
+  }
 
   return (
     <div>
@@ -33,7 +80,7 @@ function App() {
         <ActionIcon onClick={() => qrScanner.start()} color="green" size="xl" variant="filled">
           <IconFocusCentered size={34} />
         </ActionIcon>
-        <Button onClick={() => qrScanner.stop()}>Dừng</Button>
+        {/* <Button onClick={() => qrScanner.stop()}>Dừng</Button> */}
       </div>
 
       <List listStyleType="none">
@@ -43,13 +90,13 @@ function App() {
               <List.Item key={item.id}>
                 <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
                   <p>{item.name}</p>
-                  <p>{item.price}</p>
-                  <div style={{display: "flex", gap: 10}}>
-                    <ActionIcon color="green" variant="filled">
+                  <p>{vnCurrency(item.price * item.quantity)}</p>
+                  <div style={{display: "flex", gap: 10, alignItems: "center"}}>
+                    <ActionIcon color="green" variant="filled" onClick={() => increseQuantity(item.id)}>
                       <IconCirclePlus />
                     </ActionIcon>
-                    1
-                    <ActionIcon color="green" variant="filled">
+                    {item.quantity}
+                    <ActionIcon color="green" variant="filled" onClick={() => decreaseQuantity(item.id)}>
                       <IconCircleMinus />
                     </ActionIcon>
                   </div>
@@ -59,6 +106,9 @@ function App() {
           })
         }
       </List>
+      <Center>
+        <Button disabled={product.length === 0} mt={20} onClick={onSubmit}>Hoàn tất đơn hàng</Button>
+      </Center>
     </div>
   )
 }
