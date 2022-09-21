@@ -44,25 +44,27 @@ function App() {
     return price.toLocaleString('it-IT', {style : 'currency', currency : 'VND'});
   }
 
-  const increseQuantity = id => {
+  const onAction = (type, id) => {
     const itemIndex = product.findIndex((item) => item.id === id);
     if (itemIndex !== -1) {
-      setProduct(product => product.map(i => i.id === id 
-        ? { ...i, quantity: i.quantity + 1 }
-        : i
-      ));
-    }
-  }
-
-  const decreaseQuantity = id => {
-    const itemIndex = product.findIndex((item) => item.id === id);
-    if (itemIndex !== -1) {
-      setProduct(product => product.map(i => i.id === id 
-        ? { ...i, quantity: i.quantity - 1 }
-        : i
-      ));
-      if (product[itemIndex].quantity === 1) {
-        setProduct(product => product.filter(i => i.id !== id));
+      switch (type) {
+        case "increase":
+          setProduct(product => product.map(i => i.id === id 
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+          ));
+          break;
+        case "decrease":
+          setProduct(product => product.map(i => i.id === id 
+            ? { ...i, quantity: i.quantity - 1 }
+            : i
+          ));
+          if (product[itemIndex].quantity === 1) {
+            setProduct(product => product.filter(i => i.id !== id));
+          }
+          break;
+        default:
+          break;
       }
     }
   }
@@ -92,11 +94,11 @@ function App() {
                   <p>{item.name}</p>
                   <p>{vnCurrency(item.price * item.quantity)}</p>
                   <div style={{display: "flex", gap: 10, alignItems: "center"}}>
-                    <ActionIcon color="green" variant="filled" onClick={() => increseQuantity(item.id)}>
+                    <ActionIcon color="green" variant="filled" onClick={() => onAction("increase",item.id)}>
                       <IconCirclePlus />
                     </ActionIcon>
                     {item.quantity}
-                    <ActionIcon color="green" variant="filled" onClick={() => decreaseQuantity(item.id)}>
+                    <ActionIcon color="green" variant="filled" onClick={() => onAction("decrease",item.id)}>
                       <IconCircleMinus />
                     </ActionIcon>
                   </div>
